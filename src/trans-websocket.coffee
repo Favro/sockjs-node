@@ -11,7 +11,20 @@ transport = require('./transport')
 
 
 exports.app =
+
+    _websocket_verify_origin: (req, connection, head) ->
+        if !req.headers['origin']
+            return false
+
+        return @options.verify_origin(req.headers['origin']);
+
     _websocket_check: (req, connection, head) ->
+        if @options.verify_origin
+            if ! @_websocket_verify_origin(req, connection, head)
+                throw {
+                    status: 403
+                    message: 'Origin does not match'
+                }
         if not FayeWebsocket.isWebSocket(req)
             throw {
                 status: 400
